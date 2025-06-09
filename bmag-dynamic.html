@@ -1,0 +1,2006 @@
+<!DOCTYPE html>
+<html lang="vi">
+<!-- File đã được cập nhật để sử dụng hàm createDefaultTimeMarkers từ TimeCalculator -->
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BMAG - PHA THỜI GIAN (Phiên bản crypto)</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 10px;
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: #f5f5f5;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        
+        h1 {
+            color: #e01b24;
+            font-size: 22px;
+            margin-bottom: 5px;
+        }
+        
+        .time-info {
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .time-frame {
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            background-color: white;
+            transition: all 0.2s ease;
+        }
+        
+        .time-frame:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border-color: #ccc;
+        }
+        
+        /* Hiệu ứng hover đặc biệt cho S.Chủ Đạo và Hỗ Trợ */
+        .time-frame[data-role="S.Chủ Đạo"]:hover {
+            box-shadow: 0 4px 12px rgba(220, 20, 60, 0.2); /* Đỏ tươi */
+            border-color: rgba(220, 20, 60, 0.4);
+        }
+        
+        .time-frame[data-role="Chủ Đạo"]:hover {
+            box-shadow: 0 4px 12px rgba(255, 140, 0, 0.2); /* Cam đậm */
+            border-color: rgba(255, 140, 0, 0.4);
+        }
+        
+        .time-frame[data-role="Giao Pha"] {
+            border-left: 4px solid #000080; /* Xanh navy đậm */
+            background-color: rgba(0, 0, 128, 0.05);
+            box-shadow: 0 2px 5px rgba(0, 0, 128, 0.15);
+        }
+        
+        /* Hiệu ứng hover cho Giao Pha */
+        .time-frame[data-role="Giao Pha"]:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 128, 0.25); /* Xanh navy đậm */
+            border-color: rgba(0, 0, 128, 0.5);
+        }
+        
+        .time-frame[data-role="Hỗ Trợ"]:hover {
+            box-shadow: 0 4px 12px rgba(34, 139, 34, 0.2); /* Xanh lá đậm */
+            border-color: rgba(34, 139, 34, 0.4);
+        }
+        
+        .time-frame[data-role="K.Chủ Đạo"] {
+            border-left: 4px solid #4169E1; /* Xanh dương */
+            border-left-style: dashed;
+            background-color: rgba(65, 105, 225, 0.02);
+        }
+        
+        .time-frame-header {
+            width: 90px;
+            text-align: left;
+            padding-right: 15px;
+            border-right: 1px solid #eee;
+            margin-right: 15px;
+        }
+        
+        .time-frame-name {
+            font-weight: bold;
+            font-size: 16px;
+            color: #ff0000;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .time-frame-date {
+            font-size: 10px;
+            color: #333;
+            margin-top: 2px;
+            font-family: monospace;
+        }
+        
+        .time-frame-content {
+            flex: 1;
+        }
+        
+        .time-frame-stats {
+            margin-top: 3px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+            color: #555;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .frame-name-info {
+            font-weight: bold;
+            color: #e01b24;
+            flex: 0 0 auto;
+            margin-right: 3px;
+        }
+        
+        .time-remaining {
+            font-weight: bold;
+            flex: 0 0 auto;
+        }
+        
+        .time-progress {
+            color: #2a6fc9;
+            flex: 0 0 auto;
+        }
+        
+        .time-halfway {
+            font-weight: bold;
+            font-family: monospace;
+            flex: 0 0 auto;
+        }
+        
+        .phase-name {
+            color: #2a6fc9;
+            font-weight: bold;
+            flex: 0 0 auto;
+        }
+        
+        .timeline {
+            display: flex;
+            height: 14px;
+            width: 100%;
+            border-radius: 3px;
+            overflow: visible;
+            position: relative;
+            margin-bottom: 60px; /* Khoảng cách bên dưới */
+            box-shadow: none;
+            border: 1px solid #0c4a6e;
+            background-color: #0c4a6e;
+            margin-top: 45px; /* Tăng khoảng cách phía trên để có chỗ hiển thị ngày/giờ */
+        }
+        
+        .phase {
+            width: 25%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #0c4a6e;
+            font-weight: bold;
+            font-size: 8px;
+            border-right: 1px solid #0c4a6e;
+            box-sizing: border-box;
+            text-shadow: none;
+        }
+        
+        /* Loại bỏ border-right cho ô cuối cùng */
+        .phase:last-child {
+            border-right: none;
+        }
+        
+        .phase1 { background-color: #0ea5e9; } /* Xanh dương đậm */
+        .phase2 { background-color: #10b981; } /* Xanh lá đậm */
+        .phase3 { background-color: #eab308; } /* Vàng đậm */
+        .phase4 { background-color: #ec4899; } /* Hồng đậm */
+        
+        /* Thêm hiệu ứng animation cho chỉ báo NOW */
+        @keyframes nowPulse {
+            0% { opacity: 0.9; }
+            50% { opacity: 1; }
+            100% { opacity: 0.9; }
+        }
+        
+        .now-indicator {
+            position: absolute;
+            top: -12px;
+            height: calc(100% + 24px);
+            width: 2px;
+            background-color: red;
+            z-index: 5;
+            transition: left 1s linear;
+            animation: nowPulse 2s infinite;
+        }
+        
+        .now-label {
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: white;
+            color: red;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-size: 10px;
+            white-space: nowrap;
+            font-weight: bold;
+            border: 1px solid red;
+            z-index: 100;
+            pointer-events: none;
+        }
+        
+        .time-markers {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 3px;
+            font-size: 9px;
+            color: #666;
+            font-family: monospace;
+            position: absolute;
+            width: 100%;
+            top: -25px; /* Điều chỉnh lên cao hơn để có chỗ cho 2 dòng */
+        }
+        
+        .time-marker {
+            text-align: center;
+            position: absolute;
+            font-family: monospace;
+            font-size: 9px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 45px; /* Đảm bảo chiều rộng tối thiểu cho nội dung */
+            transform: translateX(-50%);
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 3px 4px;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .time-marker span {
+            display: block;
+            line-height: 1.3;
+        }
+        
+        .time-marker.now {
+            color: red;
+            font-weight: bold;
+            background-color: rgba(255, 255, 255, 0.95);
+            padding: 3px 4px;
+            border: 1px solid red;
+            border-radius: 4px;
+            z-index: 10;
+            box-shadow: 0 2px 4px rgba(255,0,0,0.2);
+        }
+        
+        /* Thêm style cho các dấu chấm thời gian */
+        .timeline-dot {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background-color: #000;
+            z-index: 10;
+            top: 0; /* Đặt dấu chấm nằm trên viền của timeline */
+            cursor: pointer;
+            border: 1px solid white;
+        }
+        
+        .timeline-dot:hover {
+            width: 8px;
+            height: 8px;
+            background-color: #e01b24;
+            box-shadow: 0 0 5px rgba(255,255,255,0.8);
+        }
+        
+        /* Style cho nhãn thời gian */
+        .timeline-dot-label {
+            position: absolute;
+            transform: translate(-50%, 0);
+            font-size: 10px;
+            color: #333;
+            font-family: monospace;
+            white-space: nowrap;
+            text-align: center;
+            font-weight: bold;
+            opacity: 0.95;
+            top: -22px;
+            background-color: rgba(255, 255, 255, 0.95);
+            padding: 3px 6px;
+            border-radius: 3px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+            z-index: 25;
+            border: 1px solid #ddd;
+        }
+        
+        /* Thêm style cho nhãn Q trên dấu chấm */
+        .q-label {
+            position: absolute;
+            font-size: 8px;
+            font-weight: bold;
+            color: #000;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-shadow: 0px 0px 2px white;
+            z-index: 9;
+        }
+        
+        /* Thêm style cho now-container */
+        .now-svg-container {
+            position: absolute;
+            z-index: 15;
+            top: 0;
+            height: 100%;
+            width: 40px;
+            overflow: visible;
+            transform: translateX(-50%);
+            pointer-events: none;
+        }
+        
+        /* Định nghĩa phần trăm hiển thị */
+        .now-percentage {
+            position: absolute;
+            bottom: -20px;
+            transform: translateX(-50%);
+            font-size: 9px;
+            color: red;
+            font-weight: bold;
+            font-family: monospace;
+            white-space: nowrap;
+            background-color: white;
+            padding: 1px 4px;
+            border: 1px solid red;
+            border-radius: 2px;
+            z-index: 15;
+        }
+
+        .filter-section {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 10px;
+            position: relative;
+        }
+        
+        .filter-button {
+            padding: 5px 10px;
+            background-color: #f0f0f0;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            font-size: 12px;
+        }
+        
+        .filter-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            width: 200px;
+            max-height: 400px;
+            overflow-y: auto;
+            display: none;
+        }
+        
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            margin: 5px 0;
+            padding: 5px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .role-tag {
+            display: inline-block;
+            padding: 1px 4px;
+            border-radius: 3px;
+            margin-left: 3px;
+            font-size: 9px;
+            color: white;
+            font-weight: bold;
+        }
+
+        .role-Siêu-Chu-Dao { 
+            background-color: #DC143C; /* Đỏ tươi - Vai trò quan trọng nhất */
+            color: #FFFFCC; /* Màu vàng nhạt để dễ đọc hơn trên nền đỏ */
+            font-weight: bold; 
+            font-size: 10px;
+            padding: 2px 5px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+            text-shadow: 0 0 1px #000; /* Thêm viền đen mỏng để tăng độ tương phản */
+        }
+        .role-Chủ-Đạo { 
+            background-color: #FF8C00; /* Cam đậm - Vai trò chủ đạo, nổi bật */
+            color: #000000; /* Màu đen để dễ đọc hơn trên nền cam */
+            font-weight: bold;
+            text-shadow: 0 0 1px #FFFFFF; /* Thêm viền trắng mỏng để tăng độ tương phản */
+        }
+        .role-Giao-Pha { 
+            background-color: #000080; /* Xanh navy đậm - Vai trò giao thoa */
+            color: #FFFFFF; /* Màu trắng */
+            font-weight: bold;
+            font-size: 10px;
+            padding: 2px 5px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+            text-shadow: 0 0 2px #000, 0 0 3px #000; /* Tăng cường viền đen để tăng độ tương phản */
+        }
+        .role-Hỗ-Trợ { 
+            background-color: #228B22; /* Xanh lá đậm - Vai trò hỗ trợ, tăng trưởng */
+            color: #FFFFCC; /* Màu vàng nhạt để dễ đọc hơn trên nền xanh lá */
+            font-weight: bold; 
+            font-size: 10px;
+            padding: 2px 5px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+            text-shadow: 0 0 1px #000; /* Thêm viền đen mỏng để tăng độ tương phản */
+        }
+        .role-K-Chủ-Đạo { 
+            background-color: #4169E1; /* Xanh dương - Vai trò phụ */
+            color: #FFFFFF; /* Giữ màu trắng vì đủ tương phản trên nền xanh dương */
+            font-weight: bold;
+            text-shadow: 0 0 1px #000; /* Thêm viền đen mỏng để tăng độ tương phản */
+        }
+
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100px;
+            font-size: 18px;
+            color: #555;
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px dashed #ccc;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+
+        .loading:after {
+            content: "...";
+            animation: dots 1.5s steps(5, end) infinite;
+        }
+
+        @keyframes dots {
+            0%, 20% { content: "."; }
+            40% { content: ".."; }
+            60%, 100% { content: "..."; }
+        }
+
+        .bmag-info {
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+            text-align: center;
+        }
+        
+        .bmag-info p {
+            margin: 0;
+            font-weight: bold;
+        }
+
+        .advice-section {
+            margin-top: 3px;
+            font-style: italic;
+            color: #555;
+            font-size: 11px;
+        }
+
+        .special-alert {
+            background-color: #FFF3CD;
+            border: 1px solid #FFEEBA;
+            color: #856404;
+            padding: 8px 15px;
+            border-radius: 4px;
+            margin: 15px 0;
+            text-align: center;
+            font-weight: bold;
+            display: none;
+        }
+
+        /* Thêm hiệu ứng đường viền của pha hiện tại */
+        .phase-active {
+            border: 1px solid rgba(255,255,255,0.7) !important;
+            box-shadow: inset 0 0 3px rgba(255,255,255,0.5);
+        }
+
+        .color-settings {
+            margin: 10px 0;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            text-align: center;
+            display: none;
+        }
+        
+        .color-picker-group {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .color-picker-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 5px;
+        }
+        
+        .color-picker-item label {
+            margin-bottom: 5px;
+            font-weight: bold;
+            font-size: 12px;
+        }
+        
+        .color-picker-item input[type="color"] {
+            width: 40px;
+            height: 30px;
+            cursor: pointer;
+        }
+        
+        .settings-button {
+            padding: 5px 10px;
+            background-color: #f0f0f0;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-top: 10px;
+        }
+
+        /* Style cho nhãn thời gian nhỏ trên mỗi dấu chấm */
+        .mini-time-label {
+            position: absolute;
+            font-size: 8px;
+            font-weight: normal;
+            color: #333;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(255, 255, 255, 0.85);
+            padding: 1px 3px;
+            border-radius: 3px;
+            white-space: nowrap;
+            z-index: 8;
+            display: none; /* Ẩn mặc định, chỉ hiển thị khi hover */
+            border: 1px solid transparent;
+        }
+        
+        .timeline-dot:hover .mini-time-label {
+            display: block;
+            font-weight: bold;
+            z-index: 16;
+            border-color: #ddd;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+        
+        /* Style cho nhãn hiển thị ngày */
+        .timeline-date-label {
+            position: absolute;
+            transform: translate(-50%, 0);
+            font-size: 8px;
+            color: #333;
+            font-family: monospace;
+            white-space: nowrap;
+            text-align: center;
+            font-weight: bold;
+            opacity: 0.9;
+            bottom: -18px;
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 1px 3px;
+            border-radius: 3px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            z-index: 20;
+        }
+
+        /* Thêm style cho khung thời gian hiện tại đang ở Q3 */
+        .time-frame[data-phase="Q3"] {
+            border: 1px solid rgba(234, 179, 8, 0.5);
+            box-shadow: 0 2px 8px rgba(234, 179, 8, 0.2);
+        }
+        
+        /* Thêm style cho khung thời gian gần 50% */
+        .time-frame[data-near-half="true"] {
+            border: 1px solid rgba(59, 130, 246, 0.5);
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
+        }
+        
+        /* Thêm style cho khung thời gian đang được xem */
+        .time-frame:target {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+        }
+        
+        /* Tạo khoảng cách giữa các nhóm khung thời gian */
+        .time-frame-group-separator {
+            height: 1px;
+            background-color: #eee;
+            margin: 25px 0;
+            position: relative;
+        }
+        
+        .time-frame-group-separator::before {
+            content: attr(data-label);
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #f5f5f5;
+            padding: 0 10px;
+            font-size: 12px;
+            color: #666;
+            font-weight: bold;
+        }
+
+        /* Thêm màu nền nhạt cho các khung thời gian theo vai trò */
+        .time-frame[data-role="S.Chủ Đạo"] {
+            border-left: 4px solid #DC143C; /* Đỏ tươi */
+            background-color: rgba(220, 20, 60, 0.03);
+            box-shadow: 0 2px 5px rgba(220, 20, 60, 0.1);
+        }
+        
+        .time-frame[data-role="Chủ Đạo"] {
+            border-left: 4px solid #FF8C00; /* Cam đậm */
+            background-color: rgba(255, 140, 0, 0.03);
+            box-shadow: 0 2px 5px rgba(255, 140, 0, 0.1);
+        }
+        
+        .time-frame[data-role="Giao Pha"] {
+            border-left: 4px solid #000080; /* Xanh navy đậm */
+            background-color: rgba(0, 0, 128, 0.03);
+        }
+        
+        .time-frame[data-role="Hỗ Trợ"] {
+            border-left: 4px solid #228B22; /* Xanh lá đậm */
+            background-color: rgba(34, 139, 34, 0.03);
+            box-shadow: 0 2px 5px rgba(34, 139, 34, 0.1);
+        }
+        
+        .time-frame[data-role="K.Chủ Đạo"] {
+            border-left: 4px solid #4169E1; /* Xanh dương */
+            border-left-style: dashed;
+            background-color: rgba(65, 105, 225, 0.02);
+        }
+        
+        /* Hiệu ứng hover đặc biệt cho các vai trò */
+        .time-frame[data-role="S.Chủ Đạo"]:hover {
+            box-shadow: 0 4px 12px rgba(220, 20, 60, 0.2); /* Đỏ tươi */
+            border-color: rgba(220, 20, 60, 0.4);
+        }
+        
+        .time-frame[data-role="Chủ Đạo"]:hover {
+            box-shadow: 0 4px 12px rgba(255, 140, 0, 0.2); /* Cam đậm */
+            border-color: rgba(255, 140, 0, 0.4);
+        }
+        
+        .time-frame[data-role="Hỗ Trợ"]:hover {
+            box-shadow: 0 4px 12px rgba(34, 139, 34, 0.2); /* Xanh lá đậm */
+            border-color: rgba(34, 139, 34, 0.4);
+        }
+
+        /* Hiệu ứng hover đặc biệt cho Siêu Chủ Đạo và Hỗ Trợ */
+        .time-frame[data-role="Siêu Chủ Đạo"]:hover {
+            box-shadow: 0 4px 12px rgba(220, 20, 60, 0.2); /* Đỏ tươi */
+            border-color: rgba(220, 20, 60, 0.4);
+        }
+
+        /* Thêm màu nền nhạt cho các khung thời gian theo vai trò */
+        .time-frame[data-role="Siêu Chủ Đạo"] {
+            border-left: 4px solid #DC143C; /* Đỏ tươi */
+            background-color: rgba(220, 20, 60, 0.03);
+            box-shadow: 0 2px 5px rgba(220, 20, 60, 0.1);
+        }
+
+        .role-Siêu-Chủ-Đạo { 
+            background-color: #DC143C; /* Đỏ tươi - Vai trò quan trọng nhất */
+            color: #FFFFCC; /* Màu vàng nhạt để dễ đọc hơn trên nền đỏ */
+            font-weight: bold; 
+            font-size: 10px;
+            padding: 2px 5px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+            text-shadow: 0 0 1px #000; /* Thêm viền đen mỏng để tăng độ tương phản */
+        }
+    </style>
+</head>
+<body>
+    <div id="time-frames-container">
+        <div class="loading" style="display: flex; justify-content: center; align-items: center; height: 100px; font-size: 18px; color: #555; margin: 20px 0; padding: 20px; border: 1px dashed #ccc; border-radius: 8px; background-color: #f9f9f9;">
+            <span>⏳ Đang tải dữ liệu BMAG...</span>
+        </div>
+    </div>
+    
+    <!-- Di chuyển thông tin quan trọng xuống cuối trang -->
+    <div class="footer-info" style="margin-top: 20px; border-top: 1px solid #ddd; padding-top: 15px;">
+        <h2 style="color: #e01b24; font-size: 18px; margin-bottom: 5px; text-align: center;">BMAG - PHA THỜI GIAN (CRYPTO - VIỆT NAM)</h2>
+        <div style="text-align: center; font-weight: bold; font-size: 14px;" id="footer-current-time">
+            NOW: Đang cập nhật...
+        </div>
+        <div style="text-align: center; font-size: 11px; color: #666; margin-top: 5px;">
+            * Thời gian thị trường Crypto: 24/7 (GMT+7)
+        </div>
+        
+        <div id="footer-bmag-info" style="margin: 10px 0; padding: 8px; background-color: #f9f9f9; border: 1px solid #ddd; border-radius: 4px; text-align: center; font-size: 11px;">
+            <span id="footer-timeframe-info">🕖 Đang tính toán...</span>
+        </div>
+        
+        <div id="footer-special-alert" style="margin: 10px 0; padding: 8px; background-color: #FFF3CD; border: 1px solid #FFEEBA; color: #856404; border-radius: 4px; text-align: center; font-weight: bold; font-size: 11px; display: none;">
+            <span class="warning-icon">⚠️</span>
+            <span id="footer-alert-message"></span>
+        </div>
+        
+        <!-- Thêm nút cài đặt màu sắc -->
+        <div style="text-align: center; margin-top: 10px;">
+            <button id="color-settings-button" class="settings-button">⚙️ Điều chỉnh màu sắc</button>
+        </div>
+        
+        <!-- Thêm phần cài đặt màu sắc -->
+        <div id="color-settings" class="color-settings">
+            <h3 style="margin-top: 0; font-size: 14px;">Điều chỉnh màu sắc các pha</h3>
+            <div class="color-picker-group">
+                <div class="color-picker-item">
+                    <label for="phase1-color">Q1 (1/4 đầu)</label>
+                    <input type="color" id="phase1-color" value="#0ea5e9">
+                </div>
+                <div class="color-picker-item">
+                    <label for="phase2-color">Q2 (1/4 thứ 2)</label>
+                    <input type="color" id="phase2-color" value="#10b981">
+                </div>
+                <div class="color-picker-item">
+                    <label for="phase3-color">Q3 (1/4 thứ 3)</label>
+                    <input type="color" id="phase3-color" value="#eab308">
+                </div>
+                <div class="color-picker-item">
+                    <label for="phase4-color">Q4 (1/4 cuối)</label>
+                    <input type="color" id="phase4-color" value="#ec4899">
+                </div>
+            </div>
+            <button id="apply-colors" class="settings-button">Áp dụng màu sắc</button>
+            <button id="reset-colors" class="settings-button">Khôi phục mặc định</button>
+        </div>
+        
+        <!-- Di chuyển bộ lọc xuống footer -->
+        <div class="filter-section" style="justify-content: center; margin-top: 10px;">
+            <div class="filter-button" id="filter-button" style="font-size: 11px; background-color: #f0f0f0; border: 1px solid #ddd; border-radius: 3px; padding: 4px 8px;">
+                <span>🔍 Lọc khung thời gian: </span>
+                <span id="filter-status">Tất cả</span>
+                <span style="margin-left: 5px">▼</span>
+            </div>
+            
+            <div class="filter-dropdown" id="filter-dropdown" style="z-index: 1000; bottom: 100%; top: auto;">
+                <div class="checkbox-item">
+                    <input type="checkbox" id="all" checked>
+                    <label for="all">Tất cả khung thời gian</label>
+                </div>
+                
+                <div class="checkbox-item">
+                    <input type="checkbox" id="filter-Siêu-Chủ-Đạo" checked>
+                    <label for="filter-Siêu-Chủ-Đạo">Siêu Chủ Đạo</label>
+                </div>
+                
+                <div class="checkbox-item">
+                    <input type="checkbox" id="filter-Chu-Dao" checked>
+                    <label for="filter-Chu-Dao">Chủ Đạo</label>
+                </div>
+                
+                <div class="checkbox-item">
+                    <input type="checkbox" id="filter-Giao-Pha" checked>
+                    <label for="filter-Giao-Pha">Giao Pha</label>
+                </div>
+                
+                <div class="checkbox-item">
+                    <input type="checkbox" id="filter-Ho-Tro" checked>
+                    <label for="filter-Ho-Tro">Hỗ Trợ</label>
+                </div>
+                
+                <div class="checkbox-item">
+                    <input type="checkbox" id="filter-K-Chu-Dao" checked>
+                    <label for="filter-K-Chu-Dao">Không Chủ Đạo</label>
+                </div>
+                
+                <div class="checkbox-item">
+                    <input type="checkbox" id="filter-Q3-only">
+                    <label for="filter-Q3-only">Chỉ hiện Q3 (Cao trào)</label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="bmag-analyzer.js"></script>
+    <script>
+        // Chờ tất cả nội dung HTML được tải xong
+        document.addEventListener('DOMContentLoaded', function() {
+            // Hiển thị thông báo đang tải
+            const loadingElement = document.querySelector('.loading');
+            if (loadingElement) {
+                loadingElement.style.display = 'flex';
+                loadingElement.textContent = 'Đang tải dữ liệu...';
+            }
+            
+            // Kiểm tra xem có thể kết nối với BMaGAnalyzer không
+            if (typeof BMaGAnalyzer === 'undefined') {
+                if (loadingElement) {
+                    loadingElement.textContent = 'Lỗi: Không thể tải dữ liệu BMAG. Vui lòng làm mới trang.';
+                    loadingElement.style.color = 'red';
+                }
+                return;
+            }
+            
+            // Biến lưu trữ trạng thái lọc
+            let activeFilters = {
+                'Siêu Chủ Đạo': true,
+                'Chủ Đạo': true,
+                'Giao Pha': true,
+                'Hỗ Trợ': true,
+                'K.Chủ Đạo': true,
+                'Q3Only': false
+            };
+
+            // Hàm cập nhật thời gian hiện tại
+            function updateCurrentTime() {
+                const timeInfo = BMaGAnalyzer.updateCurrentTime();
+                
+                document.getElementById('footer-current-time').textContent = `NOW: ${timeInfo.formatted}`;
+                
+                // Cập nhật thông tin thời gian crypto
+                updateCryptoTimeInfo();
+                
+                return timeInfo.now;
+            }
+            
+            // Cập nhật thông tin thời gian crypto
+            function updateCryptoTimeInfo() {
+                const now = new Date();
+                // Chuyển đổi sang giờ Việt Nam (UTC+7)
+                const vnTime = new Date(now.getTime() + 7 * 60 * 60 * 1000);
+                
+                // Kiểm tra theo quy tắc BMaG (ngày mới bắt đầu từ 7h sáng)
+                const currentHour = vnTime.getUTCHours();
+                const currentDate = `${String(vnTime.getUTCDate()).padStart(2, '0')}/${String(vnTime.getUTCMonth() + 1).padStart(2, '0')}/${vnTime.getUTCFullYear()}`;
+                
+                let infoText;
+                if (currentHour < 7) {
+                    // Trước 7h sáng - vẫn là ngày hôm trước
+                    const yesterday = new Date(vnTime);
+                    yesterday.setUTCDate(yesterday.getUTCDate() - 1);
+                    const bmagDate = `${String(yesterday.getUTCDate()).padStart(2, '0')}/${String(yesterday.getUTCMonth() + 1).padStart(2, '0')}/${yesterday.getUTCFullYear()}`;
+                    
+                    infoText = `🕖 Thời gian hiện tại: ${currentDate} ${String(currentHour).padStart(2, '0')}:${String(vnTime.getUTCMinutes()).padStart(2, '0')} (GMT+7)
+                        <br><b>📅 Theo BMaG:</b> Vẫn thuộc ngày ${bmagDate} (đến 07:00 sáng)`;
+                } else {
+                    // Từ 7h sáng trở đi - đã sang ngày mới
+                    infoText = `🕖 Thời gian hiện tại: ${currentDate} ${String(currentHour).padStart(2, '0')}:${String(vnTime.getUTCMinutes()).padStart(2, '0')} (GMT+7)
+                        <br><b>📅 Theo BMaG:</b> Đã sang ngày mới (từ 07:00 sáng)`;
+                }
+                
+                document.getElementById('footer-timeframe-info').innerHTML = infoText;
+            }
+
+            // Tạo HTML cho các khung thời gian
+            function createTimeFrames() {
+                const container = document.getElementById('time-frames-container');
+                
+                try {
+                    // Lấy dữ liệu từ BMaGAnalyzer
+                    const timeframeData = BMaGAnalyzer.generateTimeframeData();
+                    
+                    // Xóa thông báo loading
+                    container.innerHTML = '';
+                    
+                    // Lọc dữ liệu theo filter đang áp dụng
+                    const filteredData = timeframeData.filter(tf => {
+                        // Kiểm tra nếu vai trò của timeframe có trong filter hiện tại
+                        const roleMatch = activeFilters[tf.role];
+                        
+                        // Kiểm tra nếu Q3Only filter được bật
+                        const phaseMatch = !activeFilters.Q3Only || tf.phase === "Q3";
+                        
+                        return roleMatch && phaseMatch;
+                    });
+                    
+                    // Kiểm tra và hiển thị cảnh báo đặc biệt
+                    checkSpecialAlerts(timeframeData);
+                    
+                    // Hiển thị thông báo nếu không có dữ liệu
+                    if (filteredData.length === 0) {
+                        container.innerHTML = '<div class="loading" style="display: flex; justify-content: center; align-items: center; height: 100px; font-size: 18px; color: #555; margin: 20px 0; padding: 20px; border: 1px dashed #ccc; border-radius: 8px; background-color: #f9f9f9;">Không có khung thời gian nào phù hợp với bộ lọc</div>';
+                        return;
+                    }
+                    
+                    // Ẩn thông báo "Đang tải dữ liệu" nếu có dữ liệu
+                    const loadingElements = document.querySelectorAll('.loading');
+                    loadingElements.forEach(el => {
+                        el.style.display = 'none';
+                    });
+                    
+                    // Nhóm các khung thời gian theo vai trò
+                    const groupedData = {
+                        'Siêu Chủ Đạo': [],
+                        'Chủ Đạo': [],
+                        'Giao Pha': [],
+                        'Hỗ Trợ': [],
+                        'K.Chủ Đạo': []
+                    };
+                    
+                    filteredData.forEach(tf => {
+                        if (groupedData[tf.role]) {
+                            groupedData[tf.role].push(tf);
+                        }
+                    });
+                    
+                    // Các nhóm vai trò theo thứ tự hiển thị
+                    const roleGroups = ['Siêu Chủ Đạo', 'Chủ Đạo', 'Giao Pha', 'Hỗ Trợ', 'K.Chủ Đạo'];
+                    
+                    // Tạo HTML cho từng nhóm
+                    roleGroups.forEach((role, index) => {
+                        const timeframes = groupedData[role];
+                        
+                        // Bỏ qua nhóm không có dữ liệu
+                        if (timeframes.length === 0) return;
+                        
+                        // Thêm phân cách giữa các nhóm (trừ nhóm đầu tiên)
+                        if (index > 0) {
+                            const separator = document.createElement('div');
+                            separator.className = 'time-frame-group-separator';
+                            separator.setAttribute('data-label', role);
+                            container.appendChild(separator);
+                        } else {
+                            // Đối với nhóm đầu tiên, thêm tiêu đề nhưng không có đường phân cách
+                            const heading = document.createElement('h3');
+                            heading.style.fontSize = '14px';
+                            heading.style.color = '#666';
+                            heading.style.margin = '10px 0';
+                            heading.style.fontWeight = 'bold';
+                            heading.textContent = role;
+                            container.appendChild(heading);
+                        }
+                        
+                        // Tạo HTML cho mỗi khung thời gian trong nhóm
+                        timeframes.forEach(tf => {
+                            try {
+                                // Tạo container chính
+                                const timeFrameDiv = document.createElement('div');
+                                timeFrameDiv.className = 'time-frame';
+                                timeFrameDiv.setAttribute('data-role', tf.role);
+                                timeFrameDiv.setAttribute('data-phase', tf.phase);
+                                
+                                // Đánh dấu khung thời gian gần 50%
+                                if (tf.percent >= 45 && tf.percent <= 55) {
+                                    timeFrameDiv.setAttribute('data-near-half', 'true');
+                                }
+                                
+                                // Thêm ID để có thể nhảy đến khung thời gian này
+                                const safeId = tf.name.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '');
+                                timeFrameDiv.id = `timeframe-${safeId}`;
+                                
+                                // Tạo phần header
+                                const headerDiv = document.createElement('div');
+                                headerDiv.className = 'time-frame-header';
+                                
+                                const nameDiv = document.createElement('div');
+                                nameDiv.className = 'time-frame-name';
+                                
+                                // Tạo nhãn vai trò
+                                const roleClass = 'role-' + tf.role.replace(/\./g, '-').replace(/\s+/g, '-');
+                                nameDiv.innerHTML = `${tf.name} <span class="role-tag ${roleClass}">${tf.role}</span>`;
+                                
+                                const dateDiv = document.createElement('div');
+                                dateDiv.className = 'time-frame-date';
+                                dateDiv.textContent = tf.startDate;
+                                
+                                headerDiv.appendChild(nameDiv);
+                                headerDiv.appendChild(dateDiv);
+                                timeFrameDiv.appendChild(headerDiv);
+                                
+                                // Tạo phần nội dung
+                                const contentDiv = document.createElement('div');
+                                contentDiv.className = 'time-frame-content';
+                                
+                                // Tạo timeline
+                                const timelineDiv = document.createElement('div');
+                                timelineDiv.className = 'timeline';
+                                
+                                // Thêm các pha với kích thước bằng nhau
+                                const phases = ['Q1', 'Q2', 'Q3', 'Q4'];
+                                const phaseClasses = ['phase1', 'phase2', 'phase3', 'phase4'];
+                                
+                                for(let i = 0; i < 4; i++) {
+                                    const phaseDiv = document.createElement('div');
+                                    phaseDiv.className = `phase ${phaseClasses[i]}`;
+                                    phaseDiv.textContent = phases[i] + '.';
+                                    phaseDiv.style.width = '25%';
+                                    timelineDiv.appendChild(phaseDiv);
+                                    
+                                    // Đánh dấu pha hiện tại
+                                    if(phases[i] === tf.phase) {
+                                        phaseDiv.style.opacity = "1";
+                                        phaseDiv.style.fontWeight = "bold";
+                                        phaseDiv.classList.add('phase-active');
+                                    }
+                                }
+                                
+                                // Tạo SVG cho NOW
+                                const nowSvgContainer = document.createElement('div');
+                                nowSvgContainer.className = 'now-svg-container';
+                                nowSvgContainer.style.left = `${tf.percent}%`;
+                                // Xử lý ID an toàn cho element
+                                nowSvgContainer.id = `now-marker-${safeId}`;
+                                
+                                // Tạo SVG inline chứa cả vạch đỏ và chữ NOW
+                                nowSvgContainer.innerHTML = `
+                                    <svg width="40" height="40" style="overflow: visible; position: absolute; left: -20px; top: -20px;">
+                                        <!-- Vạch đỏ dọc -->
+                                        <line x1="20" y1="20" x2="20" y2="40" stroke="red" stroke-width="2.5" />
+                                        
+                                        <!-- Thanh ngang phía trên -->
+                                        <line x1="5" y1="20" x2="35" y2="20" stroke="red" stroke-width="2.5" />
+                                        
+                                        <!-- Chữ NOW -->
+                                        <rect x="5" y="5" width="30" height="14" fill="white" stroke="red" stroke-width="1.5" rx="3" />
+                                        <text x="20" y="16" text-anchor="middle" fill="red" font-weight="bold" font-size="10">NOW</text>
+                                    </svg>
+                                `;
+                                
+                                timelineDiv.appendChild(nowSvgContainer);
+                                
+                                // Thêm hiển thị phần trăm dưới đường NOW
+                                const nowPercentage = document.createElement('div');
+                                nowPercentage.className = 'now-percentage';
+                                nowPercentage.textContent = `${Math.round(tf.percent)}%`;
+                                nowPercentage.style.left = `${tf.percent}%`;
+                                nowPercentage.style.textAlign = 'center'; // Đảm bảo text ở giữa
+                                nowPercentage.style.width = '30px'; // Chiều rộng cố định
+                                nowPercentage.style.marginLeft = '-15px'; // Cân đối với vạch đỏ
+                                nowPercentage.style.bottom = '-18px'; // Điều chỉnh vị trí xuống thấp hơn để không đè lên nhãn 1/4
+                                nowPercentage.id = `now-percentage-${safeId}`;
+                                timelineDiv.appendChild(nowPercentage);
+                                
+                                // Xác định các dấu chấm theo từng Q
+                                const dotPositions = [];
+                                for (let q = 0; q < 4; q++) {
+                                    // Vị trí bắt đầu và kết thúc của Q
+                                    const qStart = q * 25;
+                                    
+                                    // Chia mỗi Q thành 4 phần bằng nhau
+                                    for (let i = 0; i < 4; i++) {
+                                        // Tính vị trí dấu chấm: đầu Q + khoảng cách đều
+                                        const dotPercent = qStart + (i * 25 / 4);
+                                        dotPositions.push(dotPercent);
+                                    }
+                                }
+                                // Thêm vị trí 100% vào cuối
+                                dotPositions.push(100);
+                                
+                                // Tạo mảng thời gian tương ứng với các điểm
+                                const timeMarkers = [];
+                                
+                                // Tính toán thời gian chính xác cho các dấu chấm dựa trên khung thời gian
+                                if (tf.startTime && tf.endTime) {
+                                    try {
+                                        const startTime = new Date(tf.startTime);
+                                        const endTime = new Date(tf.endTime);
+                                        const timeRange = endTime - startTime;
+                                        
+                                        // Tạo các mốc thời gian cho từng dấu chấm
+                                        for (let i = 0; i < dotPositions.length; i++) {
+                                            const percentTime = dotPositions[i] / 100;
+                                            const timePoint = new Date(startTime.getTime() + (timeRange * percentTime));
+                                            
+                                            // Định dạng ngày và giờ
+                                            const datePart = `${String(timePoint.getDate()).padStart(2, '0')}/${String(timePoint.getMonth() + 1).padStart(2, '0')}`;
+                                            const timePart = `${String(timePoint.getHours()).padStart(2, '0')}:${String(timePoint.getMinutes()).padStart(2, '0')}`;
+                                            
+                                            // Đảm bảo dấu chấm đầu tiên và cuối cùng chính xác với thời gian bắt đầu/kết thúc
+                                            if (i === 0) {
+                                                // Dấu chấm đầu tiên luôn là thời gian bắt đầu chính xác
+                                                const startDateParts = tf.startDate.split(' ');
+                                                const startDateOnly = startDateParts[0].split('/');
+                                                const startDateFormatted = startDateOnly.length >= 2 ? 
+                                                    `${startDateOnly[0]}/${startDateOnly[1]}` : datePart;
+                                                    
+                                                const startTimeFormatted = startDateParts.length > 1 ? 
+                                                    startDateParts[1] : `${String(startTime.getHours()).padStart(2, '0')}:${String(startTime.getMinutes()).padStart(2, '0')}`;
+                                                
+                                                timeMarkers.push([startDateFormatted, startTimeFormatted]);
+                                            } 
+                                            else if (i === dotPositions.length - 1) {
+                                                // Dấu chấm cuối cùng luôn là thời gian kết thúc chính xác
+                                                const endDateParts = tf.endDate ? tf.endDate.split(' ') : [];
+                                                const endDateOnly = endDateParts.length > 0 ? endDateParts[0].split('/') : [];
+                                                const endDateFormatted = endDateOnly.length >= 2 ? 
+                                                    `${endDateOnly[0]}/${endDateOnly[1]}` : datePart;
+                                                    
+                                                const endTimeFormatted = endDateParts.length > 1 ? 
+                                                    endDateParts[1] : `${String(endTime.getHours()).padStart(2, '0')}:${String(endTime.getMinutes()).padStart(2, '0')}`;
+                                                
+                                                timeMarkers.push([endDateFormatted, endTimeFormatted]);
+                                            }
+                                            else {
+                                                timeMarkers.push([datePart, timePart]);
+                                            }
+                                        }
+                                    } catch (error) {
+                                        console.error("Lỗi khi tính thời gian cho " + tf.name, error);
+                                        // Nếu không có thời gian bắt đầu/kết thúc, tạo mốc thời gian mặc định
+                                        createDefaultTimeMarkers(tf, timeMarkers, dotPositions.length);
+                                    }
+                                } else {
+                                    // Nếu không có thời gian bắt đầu/kết thúc, tạo mốc thời gian mặc định
+                                    createDefaultTimeMarkers(tf, timeMarkers, dotPositions.length);
+                                }
+                                
+                                // Tính toán vị trí phần trăm hiện tại
+                                const nowIndex = Math.min(timeMarkers.length - 1, Math.floor(tf.percent * (timeMarkers.length - 1) / 100));
+                                
+                                // Thêm các mốc thời gian vào timeline
+                                const markersDiv = document.createElement('div');
+                                markersDiv.className = 'time-markers';
+                                markersDiv.style.position = 'absolute';
+                                markersDiv.style.width = '100%';
+                                markersDiv.style.bottom = '-40px'; // Đặt mốc thời gian xuống dưới
+                                markersDiv.style.display = 'flex';
+                                markersDiv.style.justifyContent = 'space-between';
+                                markersDiv.style.alignItems = 'flex-start';
+                                markersDiv.style.fontSize = '9px';
+                                markersDiv.style.color = '#333';
+                                
+                                // Xóa tất cả marker hiện tại
+                                markersDiv.innerHTML = '';
+                                
+                                // Thêm dấu chấm vào timeline theo mẫu 40.jpg
+                                for (let i = 0; i < dotPositions.length; i++) {
+                                    // Kiểm tra nếu là khung thời gian 1m, 5m hoặc 15m thì bỏ qua không tạo dấu chấm
+                                    if (tf.name === "1m" || tf.name === "5m" || tf.name === "15m") {
+                                        continue;
+                                    }
+                                    
+                                    // Tạo dấu chấm thời gian
+                                    const dotElement = document.createElement('div');
+                                    dotElement.className = 'timeline-dot';
+                                    dotElement.style.position = 'absolute';
+                                    dotElement.style.left = `${dotPositions[i]}%`;
+                                    dotElement.style.top = '7px'; // Đặt chính giữa timeline
+                                    dotElement.style.transform = 'translate(-50%, 0)';
+                                    dotElement.style.borderRadius = '50%';
+                                    dotElement.style.zIndex = '5';
+                                    
+                                    // Làm nổi bật các dấu chấm tại các điểm Q chính
+                                    if (i === 0 || i === 4 || i === 8 || i === 12 || i === 16) {
+                                        dotElement.style.width = '6px';
+                                        dotElement.style.height = '6px';
+                                        dotElement.style.border = '1px solid white';
+                                        dotElement.style.backgroundColor = '#000'; // Tất cả dấu chấm chính đều màu đen
+                                    } else {
+                                        // Dấu chấm thường nhỏ hơn
+                                        dotElement.style.width = '3px';
+                                        dotElement.style.height = '3px';
+                                        dotElement.style.backgroundColor = '#000'; // Màu đen cho các dấu chấm nhỏ
+                                        dotElement.style.border = '1px solid rgba(255,255,255,0.3)';
+                                    }
+                                    
+                                    // Đánh dấu đặc biệt cho dấu chấm ở 50%
+                                    if (Math.abs(dotPositions[i] - 50) < 0.1) {
+                                        dotElement.style.backgroundColor = 'red';
+                                        dotElement.style.width = '6px';
+                                        dotElement.style.height = '6px';
+                                        dotElement.style.border = '1px solid white';
+                                        dotElement.style.zIndex = '12';
+                                    }
+                                    
+                                    // Đánh dấu đặc biệt cho dấu chấm NOW
+                                    if (i === nowIndex) {
+                                        // Không hiển thị dấu chấm đỏ NOW vì đã có chỉ báo NOW riêng
+                                        // dotElement.style.backgroundColor = 'red';
+                                        // dotElement.style.border = '1px solid white';
+                                        // dotElement.style.width = '7px';
+                                        // dotElement.style.height = '7px';
+                                        // dotElement.style.zIndex = '15';
+                                        // dotElement.style.boxShadow = '0 0 3px white';
+                                    }
+                                    
+                                    timelineDiv.appendChild(dotElement);
+                                    
+                                    // Hiển thị thời gian TRÊN dấu chấm - style như mẫu 40.jpg
+                                    if (i < timeMarkers.length) {
+                                        // Kiểm tra trùng lặp với dấu chấm trước đó
+                                        let shouldDisplay = true;
+                                        
+                                        // Chỉ kiểm tra trùng lặp nếu không phải là dấu chấm đầu tiên và không phải dấu chấm chính
+                                        if (i > 0 && i % 4 !== 0 && i !== timeMarkers.length - 1) {
+                                            // So sánh với dấu chấm trước đó
+                                            const prevMarker = timeMarkers[i-1];
+                                            const currentMarker = timeMarkers[i];
+                                            
+                                            // Nếu ngày và giờ giống nhau, không hiển thị
+                                            if (prevMarker[0] === currentMarker[0] && prevMarker[1] === currentMarker[1]) {
+                                                shouldDisplay = false;
+                                            }
+                                            
+                                            // Nếu khoảng cách giữa 2 dấu chấm quá gần, không hiển thị
+                                            if (Math.abs(dotPositions[i] - dotPositions[i-1]) < 6) {
+                                                shouldDisplay = false;
+                                            }
+                                        }
+                                        
+                                        // Luôn hiển thị các dấu chấm chính (đầu Q) và dấu chấm hiện tại
+                                        if (i === 0 || i === 4 || i === 8 || i === 12 || i === 16 || i === nowIndex) {
+                                            shouldDisplay = true;
+                                        }
+                                        
+                                        if (shouldDisplay) {
+                                            const markerDiv = document.createElement('div');
+                                            markerDiv.style.position = 'absolute';
+                                            markerDiv.style.left = `${dotPositions[i]}%`;
+                                            markerDiv.style.transform = 'translateX(-50%)';
+                                            markerDiv.style.top = '-30px'; // Chuyển từ bottom lên top
+                                            markerDiv.style.textAlign = 'center';
+                                            markerDiv.style.width = '40px';
+                                            markerDiv.style.fontSize = '8px';
+                                            markerDiv.style.fontFamily = 'monospace';
+                                            markerDiv.style.color = '#333';
+                                            markerDiv.style.lineHeight = '1.2';
+                                            
+                                            // Hiển thị ngày/tháng
+                                            const dateDiv = document.createElement('div');
+                                            dateDiv.textContent = timeMarkers[i][0];
+                                            markerDiv.appendChild(dateDiv);
+                                            
+                                            // Hiển thị giờ:phút
+                                            const timeDiv = document.createElement('div');
+                                            timeDiv.textContent = timeMarkers[i][1];
+                                            markerDiv.appendChild(timeDiv);
+                                            
+                                            // Highlight thời gian hiện tại
+                                            if (i === nowIndex) {
+                                                dateDiv.style.color = 'red';
+                                                timeDiv.style.color = 'red';
+                                                dateDiv.style.fontWeight = 'bold';
+                                                timeDiv.style.fontWeight = 'bold';
+                                            }
+                                            
+                                            markersDiv.appendChild(markerDiv);
+                                        }
+                                    }
+                                }
+                                
+                                // Lưu trữ timeMarkers vào dataset của timeline để có thể sử dụng khi cập nhật
+                                timelineDiv.dataset.timeMarkers = JSON.stringify(timeMarkers);
+                                
+                                // Thêm nhãn 1/4 đầu, 1/4 thứ 2, 1/4 thứ 3, 1/4 cuối cùng vào dưới timeline - style theo 40.jpg
+                                const quarterLabels = [
+                                    { text: "1/4 đầu", left: "12.5%", color: "#0ea5e9" },  // Giữa Q1
+                                    { text: "1/4 thứ 2", left: "37.5%", color: "#10b981" }, // Giữa Q2
+                                    { text: "1/4 thứ 3", left: "62.5%", color: "#eab308" }, // Giữa Q3
+                                    { text: "1/4 cuối cùng", left: "87.5%", color: "#ec4899" } // Giữa Q4
+                                ];
+                                
+                                // Thêm một div cho phần nền của nhãn 1/4
+                                const quarterLabelBackground = document.createElement('div');
+                                quarterLabelBackground.style.position = 'absolute';
+                                quarterLabelBackground.style.left = '0';
+                                quarterLabelBackground.style.right = '0';
+                                quarterLabelBackground.style.bottom = '-25px'; // Chuyển lên cao hơn vì không còn ngày giờ bên dưới
+                                quarterLabelBackground.style.height = '15px';
+                                quarterLabelBackground.style.backgroundColor = 'rgba(240, 240, 240, 0.5)';
+                                timelineDiv.appendChild(quarterLabelBackground);
+                                
+                                for (const label of quarterLabels) {
+                                    const labelDiv = document.createElement('div');
+                                    labelDiv.textContent = label.text;
+                                    labelDiv.style.position = 'absolute';
+                                    labelDiv.style.left = label.left;
+                                    labelDiv.style.transform = 'translateX(-50%)';
+                                    labelDiv.style.bottom = '-25px'; // Chuyển lên cao hơn vì không còn ngày giờ bên dưới
+                                    labelDiv.style.color = label.color;
+                                    labelDiv.style.fontWeight = 'bold';
+                                    labelDiv.style.fontSize = '10px';
+                                    labelDiv.style.textAlign = 'center';
+                                    labelDiv.style.width = '80px';
+                                    labelDiv.style.zIndex = '2';
+                                    
+                                    timelineDiv.appendChild(labelDiv);
+                                }
+                                
+                                // Thêm ngày/giờ kết thúc ở dưới bên phải timeline - style theo 40.jpg
+                                if (timeMarkers.length > 0) {
+                                    // Lấy thời gian bắt đầu từ timeMarkers[0] đã được cập nhật
+                                    const startDateTimeDiv = document.createElement('div');
+                                    startDateTimeDiv.textContent = `${timeMarkers[0][0]} ${timeMarkers[0][1]}`;
+                                    startDateTimeDiv.style.position = 'absolute';
+                                    startDateTimeDiv.style.left = '0';
+                                    startDateTimeDiv.style.bottom = '-45px'; // Chuyển lên cao hơn
+                                    startDateTimeDiv.style.fontSize = '9px';
+                                    startDateTimeDiv.style.fontFamily = 'monospace';
+                                    startDateTimeDiv.style.color = '#333';
+                                    timelineDiv.appendChild(startDateTimeDiv);
+                                    
+                                    // Lấy thời gian kết thúc từ timeMarkers cuối cùng đã được cập nhật
+                                    const endDateTimeDiv = document.createElement('div');
+                                    const lastIndex = timeMarkers.length - 1;
+                                    endDateTimeDiv.textContent = `${timeMarkers[lastIndex][0]} ${timeMarkers[lastIndex][1]}`;
+                                    endDateTimeDiv.style.position = 'absolute';
+                                    endDateTimeDiv.style.right = '0';
+                                    endDateTimeDiv.style.bottom = '-45px'; // Chuyển lên cao hơn
+                                    endDateTimeDiv.style.fontSize = '9px';
+                                    endDateTimeDiv.style.fontFamily = 'monospace';
+                                    endDateTimeDiv.style.color = '#333';
+                                    timelineDiv.appendChild(endDateTimeDiv);
+                                }
+                                
+                                timelineDiv.appendChild(markersDiv);
+                                contentDiv.appendChild(timelineDiv);
+                                
+                                // Thêm thông tin thời gian còn lại và tiến trình
+                                const statsDiv = document.createElement('div');
+                                statsDiv.className = 'time-frame-stats';
+                                
+                                // Thêm thông tin còn lại với tên khung
+                                const remainingDiv = document.createElement('div');
+                                remainingDiv.className = 'time-remaining';
+                                remainingDiv.textContent = `${tf.name} Còn lại: ${tf.remaining}`;
+                                statsDiv.appendChild(remainingDiv);
+                                
+                                // Thêm thông tin tiến độ với tên khung
+                                const progressDiv = document.createElement('div');
+                                progressDiv.className = 'time-progress';
+                                progressDiv.textContent = `${tf.name} ${Math.round(tf.percent)}% hoàn thành`;
+                                statsDiv.appendChild(progressDiv);
+
+                                // Thêm thông tin đến 50% với tên khung
+                                const halfwayTimeDiv = document.createElement('div');
+                                halfwayTimeDiv.className = 'time-halfway';
+                                halfwayTimeDiv.textContent = `${tf.name} Đến 50%: ${tf.toHalf}`;
+                                halfwayTimeDiv.style.color = tf.toHalf !== "Đã qua" ? "#DC143C" : "#666666";
+                                halfwayTimeDiv.style.fontWeight = "bold";
+                                statsDiv.appendChild(halfwayTimeDiv);
+                                
+                                // Thêm thông tin pha với tên khung và màu tương ứng với màu nền
+                                const phaseNameDiv = document.createElement('div');
+                                phaseNameDiv.className = 'phase-name';
+                                
+                                // Xác định màu tương ứng cho từng pha - Đọc từ localStorage nếu có
+                                let phaseColor;
+                                const savedColors = localStorage.getItem('bmag-colors');
+                                const colors = savedColors ? JSON.parse(savedColors) : {
+                                    phase1: '#0ea5e9',
+                                    phase2: '#10b981',
+                                    phase3: '#eab308',
+                                    phase4: '#ec4899'
+                                };
+                                
+                                // Lấy màu nền hiện tại của pha tương ứng
+                                const phaseElements = document.querySelectorAll('.phase');
+                                let actualPhaseColor;
+                                
+                                if (tf.phase === "Q1") {
+                                    const phase1Element = document.querySelector('.phase1');
+                                    actualPhaseColor = phase1Element ? getComputedStyle(phase1Element).backgroundColor : colors.phase1;
+                                } else if (tf.phase === "Q2") {
+                                    const phase2Element = document.querySelector('.phase2');
+                                    actualPhaseColor = phase2Element ? getComputedStyle(phase2Element).backgroundColor : colors.phase2;
+                                } else if (tf.phase === "Q3") {
+                                    const phase3Element = document.querySelector('.phase3');
+                                    actualPhaseColor = phase3Element ? getComputedStyle(phase3Element).backgroundColor : colors.phase3;
+                                } else { // Q4
+                                    const phase4Element = document.querySelector('.phase4');
+                                    actualPhaseColor = phase4Element ? getComputedStyle(phase4Element).backgroundColor : colors.phase4;
+                                }
+                                
+                                // Hiển thị tên pha với màu tương ứng với màu nền thực tế
+                                phaseNameDiv.textContent = `${tf.name} Pha ${tf.phase}: ${tf.phase_name.split(':')[1].trim()}`;
+                                phaseNameDiv.style.color = actualPhaseColor;
+                                phaseNameDiv.style.fontWeight = "bold";
+                                statsDiv.appendChild(phaseNameDiv);
+                                
+                                contentDiv.appendChild(statsDiv);
+
+                                // Thêm advice từ BMaG
+                                const adviceDiv = document.createElement('div');
+                                adviceDiv.className = 'advice-section';
+                                adviceDiv.textContent = tf.advice;
+                                contentDiv.appendChild(adviceDiv);
+                                
+                                timeFrameDiv.appendChild(contentDiv);
+                                container.appendChild(timeFrameDiv);
+                            } catch (error) {
+                                console.error(`Lỗi khi tạo khung thời gian ${tf.name}:`, error);
+                                // Hiển thị thông báo lỗi cho khung thời gian này
+                                const errorDiv = document.createElement('div');
+                                errorDiv.className = 'time-frame';
+                                errorDiv.style.backgroundColor = '#FFEBEE';
+                                errorDiv.style.border = '1px solid #FFCDD2';
+                                errorDiv.style.padding = '10px';
+                                errorDiv.style.marginBottom = '10px';
+                                errorDiv.style.borderRadius = '4px';
+                                errorDiv.innerHTML = `<strong style="color: #D32F2F;">Lỗi khi tạo khung thời gian ${tf.name}:</strong> ${error.message}`;
+                                container.appendChild(errorDiv);
+                            }
+                        });
+                    });
+                } catch (error) {
+                    console.error('Lỗi khi tạo khung thời gian:', error);
+                    container.innerHTML = `<div class="loading" style="display: flex; justify-content: center; align-items: center; height: 100px; font-size: 18px; color: #D32F2F; margin: 20px 0; padding: 20px; border: 1px dashed #FFCDD2; border-radius: 8px; background-color: #FFEBEE;">
+                        <div>
+                            <p><strong>Lỗi khi tạo khung thời gian:</strong></p>
+                            <p>${error.message}</p>
+                            <p>Vui lòng làm mới trang hoặc kiểm tra lại dữ liệu.</p>
+                        </div>
+                    </div>`;
+                }
+            }
+
+            // Kiểm tra và hiển thị cảnh báo đặc biệt
+            function checkSpecialAlerts(timeframeData) {
+                const alertDiv = document.getElementById('footer-special-alert');
+                const alertMessage = document.getElementById('footer-alert-message');
+                alertDiv.style.display = 'none';
+
+                // Sử dụng hàm từ BMaGAnalyzer
+                const alertInfo = BMaGAnalyzer.checkSpecialAlerts(timeframeData);
+                
+                if (alertInfo.show) {
+                    alertMessage.textContent = alertInfo.message;
+                    alertDiv.style.display = 'block';
+                } else {
+                    // Ẩn thông báo cảnh báo nếu không có cảnh báo
+                    alertDiv.style.display = 'none';
+                }
+            }
+
+            // Thiết lập filter dropdown
+            function setupFilterDropdown() {
+                const filterButton = document.getElementById('filter-button');
+                const filterDropdown = document.getElementById('filter-dropdown');
+                const allCheckbox = document.getElementById('all');
+                
+                // Hiển thị/ẩn dropdown
+                filterButton.addEventListener('click', function() {
+                    if (filterDropdown.style.display === 'block') {
+                        filterDropdown.style.display = 'none';
+                    } else {
+                        filterDropdown.style.display = 'block';
+                    }
+                });
+                
+                // Đóng dropdown khi click ra ngoài
+                document.addEventListener('click', function(event) {
+                    if (!filterButton.contains(event.target) && !filterDropdown.contains(event.target)) {
+                        filterDropdown.style.display = 'none';
+                    }
+                });
+                
+                // Xử lý checkbox "Tất cả"
+                allCheckbox.addEventListener('change', function() {
+                    const checkboxes = filterDropdown.querySelectorAll('input[type="checkbox"]');
+                    checkboxes.forEach(checkbox => {
+                        if (checkbox.id !== 'all' && checkbox.id !== 'filter-Q3-only') {
+                            checkbox.checked = allCheckbox.checked;
+                            const roleKey = checkbox.id.replace('filter-', '').replace(/-/g, ' ').replace('Sieu Chu Dao', 'Siêu Chủ Đạo').replace('K Chu Dao', 'K.Chủ Đạo').replace('Ho Tro', 'Hỗ Trợ').replace('Chu Dao', 'Chủ Đạo').replace('Giao Pha', 'Giao Pha');
+                            activeFilters[roleKey] = allCheckbox.checked;
+                        }
+                    });
+                    updateFilterStatus();
+                    createTimeFrames();
+                });
+                
+                // Xử lý các checkbox khác
+                const roleCheckboxes = filterDropdown.querySelectorAll('input[type="checkbox"]:not(#all):not(#filter-Q3-only)');
+                roleCheckboxes.forEach(checkbox => {
+                    checkbox.addEventListener('change', function() {
+                        const roleKey = checkbox.id.replace('filter-', '').replace(/-/g, ' ').replace('Sieu Chu Dao', 'Siêu Chủ Đạo').replace('K Chu Dao', 'K.Chủ Đạo').replace('Ho Tro', 'Hỗ Trợ').replace('Chu Dao', 'Chủ Đạo').replace('Giao Pha', 'Giao Pha');
+                        activeFilters[roleKey] = checkbox.checked;
+                        
+                        // Cập nhật trạng thái checkbox "Tất cả"
+                        const allChecked = Array.from(roleCheckboxes).every(cb => cb.checked);
+                        allCheckbox.checked = allChecked;
+                        
+                        updateFilterStatus();
+                        createTimeFrames();
+                    });
+                });
+                
+                // Xử lý checkbox Q3 Only
+                const q3Checkbox = document.getElementById('filter-Q3-only');
+                q3Checkbox.addEventListener('change', function() {
+                    activeFilters.Q3Only = q3Checkbox.checked;
+                    updateFilterStatus();
+                    createTimeFrames();
+                });
+            }
+            
+            // Cập nhật trạng thái bộ lọc hiển thị
+            function updateFilterStatus() {
+                const filterStatus = document.getElementById('filter-status');
+                
+                if (activeFilters.Q3Only) {
+                    filterStatus.textContent = 'Chỉ Q3 (Cao trào)';
+                    return;
+                }
+                
+                const activeRoles = [];
+                if (activeFilters['Siêu Chủ Đạo']) activeRoles.push('SCĐ');
+                if (activeFilters['Chủ Đạo']) activeRoles.push('CĐ');
+                if (activeFilters['Giao Pha']) activeRoles.push('GP');
+                if (activeFilters['Hỗ Trợ']) activeRoles.push('HT');
+                if (activeFilters['K.Chủ Đạo']) activeRoles.push('KCĐ');
+                
+                if (activeRoles.length === 5) {
+                    filterStatus.textContent = 'Tất cả';
+                } else if (activeRoles.length === 0) {
+                    filterStatus.textContent = 'Không có';
+                } else {
+                    filterStatus.textContent = activeRoles.join(', ');
+                }
+            }
+            
+            // Khởi tạo và cập nhật mỗi giây
+            updateCurrentTime();
+            createTimeFrames();
+            setupFilterDropdown();
+            
+            // Cập nhật thông tin thời gian ngay khi trang được tải
+            document.getElementById('footer-current-time').textContent = `NOW: ${BMaGAnalyzer.updateCurrentTime().formatted}`;
+            document.getElementById('footer-timeframe-info').innerHTML = `🕖 Thời gian hiện tại: ${new Date().toLocaleString('vi-VN')} (GMT+7)`;
+            
+            // Hàm cập nhật vị trí NOW
+            function updateNowPositions() {
+                // Lấy dữ liệu thời gian mới - Tính toán lại thời gian thực
+                const timeframeData = BMaGAnalyzer.generateTimeframeData();
+                
+                timeframeData.forEach(tf => {
+                    // Xử lý ID an toàn
+                    const safeId = tf.name.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '');
+                    
+                    // Cập nhật vị trí marker NOW
+                    const marker = document.getElementById(`now-marker-${safeId}`);
+                    if (marker) {
+                        marker.style.left = `${tf.percent}%`;
+                    }
+                    
+                    // Cập nhật vị trí và nội dung phần trăm
+                    const percentage = document.getElementById(`now-percentage-${safeId}`);
+                    if (percentage) {
+                        percentage.style.left = `${tf.percent}%`;
+                        percentage.textContent = `${Math.round(tf.percent)}%`;
+                    }
+                    
+                    // Cập nhật dấu chấm hiện tại
+                    const nowIndex = Math.floor(tf.percent * 12 / 100);
+                    const timelineDiv = marker ? marker.closest('.timeline') : null;
+                    
+                    if (timelineDiv) {
+                        // Cập nhật hiển thị dấu chấm hiện tại
+                        const dots = timelineDiv.querySelectorAll('.timeline-dot');
+                        
+                        // Kiểm tra nếu là khung thời gian 1m, 5m hoặc 15m thì bỏ qua việc cập nhật dấu chấm
+                        if (tf.name === "1m" || tf.name === "5m" || tf.name === "15m") {
+                            // Xóa tất cả dấu chấm hiện có nếu có
+                            dots.forEach(dot => {
+                                dot.remove();
+                            });
+                        } else {
+                            dots.forEach((dot, index) => {
+                                if (index === nowIndex) {
+                                    // Không hiển thị dấu chấm đỏ NOW vì đã có chỉ báo NOW riêng
+                                    // dot.style.backgroundColor = 'red';
+                                    // dot.style.border = '1px solid white';
+                                    // dot.style.width = '7px';
+                                    // dot.style.height = '7px';
+                                    // dot.style.zIndex = '15';
+                                    // dot.style.boxShadow = '0 0 3px white';
+                                } else {
+                                    // Khôi phục lại kích thước và style ban đầu
+                                    if (index === 0 || index === 4 || index === 8 || index === 12 || index === 16) {
+                                        dot.style.width = '6px';
+                                        dot.style.height = '6px';
+                                        
+                                        // Đặt lại màu dựa trên pha - tất cả dấu chấm đều màu đen
+                                        dot.style.backgroundColor = '#000'; // Tất cả dấu chấm đều màu đen
+                                        
+                                        // Đánh dấu đặc biệt cho dấu chấm ở 50%
+                                        const dotPosition = (index / dots.length) * 100;
+                                        if (Math.abs(dotPosition - 50) < 0.1) {
+                                            dot.style.backgroundColor = 'red';
+                                            dot.style.width = '6px';
+                                            dot.style.height = '6px';
+                                            dot.style.border = '1px solid white';
+                                            dot.style.zIndex = '12';
+                                        }
+                                    } else {
+                                        // Dấu chấm thường nhỏ hơn
+                                        dot.style.width = '3px';
+                                        dot.style.height = '3px';
+                                        dot.style.backgroundColor = '#000'; // Màu đen cho các dấu chấm nhỏ
+                                        dot.style.border = '1px solid rgba(255,255,255,0.3)';
+                                    }
+                                    
+                                    dot.style.zIndex = '5';
+                                    dot.style.boxShadow = 'none';
+                                }
+                            });
+                        }
+                        
+                        // Cập nhật hiển thị marker thời gian hiện tại và xử lý trùng lặp
+                        const markersContainer = timelineDiv.querySelector('.time-markers');
+                        if (markersContainer && timelineDiv.dataset.timeMarkers) {
+                            try {
+                                // Lấy dữ liệu timeMarkers từ dataset
+                                const timeMarkers = JSON.parse(timelineDiv.dataset.timeMarkers);
+                                
+                                // Tính toán lại nowIndex dựa trên phần trăm hiện tại
+                                const nowIndex = Math.min(timeMarkers.length - 1, Math.floor(tf.percent * (timeMarkers.length - 1) / 100));
+                                
+                                // Cập nhật trạng thái cho các marker hiện có
+                                const markerElements = markersContainer.querySelectorAll('div');
+                                let visibleMarkerIndex = 0;
+                                
+                                markerElements.forEach(markerEl => {
+                                    // Tìm các phần tử con chứa ngày và giờ
+                                    const dateDiv = markerEl.querySelector('div:first-child');
+                                    const timeDiv = markerEl.querySelector('div:last-child');
+                                    
+                                    if (dateDiv && timeDiv) {
+                                        // Kiểm tra xem marker này có phải là vị trí NOW không
+                                        if (visibleMarkerIndex === nowIndex) {
+                                            dateDiv.style.color = 'red';
+                                            timeDiv.style.color = 'red';
+                                            dateDiv.style.fontWeight = 'bold';
+                                            timeDiv.style.fontWeight = 'bold';
+                                            markerEl.classList.add('now');
+                                        } else {
+                                            dateDiv.style.color = '#333';
+                                            timeDiv.style.color = '#333';
+                                            dateDiv.style.fontWeight = 'normal';
+                                            timeDiv.style.fontWeight = 'normal';
+                                            markerEl.classList.remove('now');
+                                        }
+                                        
+                                        visibleMarkerIndex++;
+                                    }
+                                });
+                            } catch (error) {
+                                console.error('Lỗi khi cập nhật markers:', error);
+                            }
+                        }
+                    }
+                    
+                    // Cập nhật thông tin thời gian và phần trăm
+                    // Tìm các phần tử hiển thị thông tin
+                    const timeFrameElements = document.querySelectorAll('.time-frame');
+                    timeFrameElements.forEach(frameEl => {
+                        // Kiểm tra xem frameEl có phải là khung thời gian của tf không
+                        const frameName = frameEl.querySelector('.time-frame-name');
+                        if (frameName && frameName.textContent.includes(tf.name)) {
+                            // Cập nhật thông tin còn lại
+                            const remainingEl = frameEl.querySelector('.time-remaining');
+                            if (remainingEl) {
+                                remainingEl.textContent = `${tf.name} Còn lại: ${tf.remaining}`;
+                            }
+                            
+                            // Cập nhật thông tin % hoàn thành
+                            const progressEl = frameEl.querySelector('.time-progress');
+                            if (progressEl) {
+                                progressEl.textContent = `${tf.name} ${Math.round(tf.percent)}% hoàn thành`;
+                            }
+                            
+                            // Cập nhật thông tin đến 50%
+                            const halfwayEl = frameEl.querySelector('.time-halfway');
+                            if (halfwayEl) {
+                                halfwayEl.textContent = `${tf.name} Đến 50%: ${tf.toHalf}`;
+                                halfwayEl.style.color = tf.toHalf !== "Đã qua" ? "#DC143C" : "#666666";
+                            }
+                            
+                            // Cập nhật màu chữ của thông tin pha
+                            const phaseNameEl = frameEl.querySelector('.phase-name');
+                            if (phaseNameEl) {
+                                // Lấy màu nền thực tế của pha
+                                let actualPhaseColor;
+                                if (tf.phase === "Q1") {
+                                    const phase1Element = document.querySelector('.phase1');
+                                    actualPhaseColor = phase1Element ? getComputedStyle(phase1Element).backgroundColor : '#0ea5e9';
+                                } else if (tf.phase === "Q2") {
+                                    const phase2Element = document.querySelector('.phase2');
+                                    actualPhaseColor = phase2Element ? getComputedStyle(phase2Element).backgroundColor : '#10b981';
+                                } else if (tf.phase === "Q3") {
+                                    const phase3Element = document.querySelector('.phase3');
+                                    actualPhaseColor = phase3Element ? getComputedStyle(phase3Element).backgroundColor : '#eab308';
+                                } else { // Q4
+                                    const phase4Element = document.querySelector('.phase4');
+                                    actualPhaseColor = phase4Element ? getComputedStyle(phase4Element).backgroundColor : '#ec4899';
+                                }
+                                phaseNameEl.style.color = actualPhaseColor;
+                                
+                                // Cập nhật nội dung pha nếu đã thay đổi
+                                if (!phaseNameEl.textContent.includes(tf.phase)) {
+                                    phaseNameEl.textContent = `${tf.name} Pha ${tf.phase}: ${tf.phase_name.split(':')[1].trim()}`;
+                                }
+                            }
+                            
+                            // Cập nhật lớp active cho pha hiện tại
+                            const phaseElements = frameEl.querySelectorAll('.phase');
+                            phaseElements.forEach((phaseEl, index) => {
+                                if (phaseEl.textContent.includes(tf.phase)) {
+                                    phaseEl.classList.add('phase-active');
+                                    phaseEl.style.opacity = "1";
+                                    phaseEl.style.fontWeight = "bold";
+                                } else {
+                                    phaseEl.classList.remove('phase-active');
+                                    phaseEl.style.opacity = "";
+                                    phaseEl.style.fontWeight = "";
+                                }
+                            });
+                        }
+                    });
+                });
+                
+                // Kiểm tra và hiển thị cảnh báo đặc biệt
+                checkSpecialAlerts(timeframeData);
+            }
+            
+            // Gọi ngay lần đầu
+            updateNowPositions();
+            
+            // Sau đó cập nhật định kỳ
+            setInterval(() => {
+                updateCurrentTime();
+                updateNowPositions();
+            }, 1000);
+            
+            // Xử lý điều chỉnh màu sắc
+            const colorSettingsButton = document.getElementById('color-settings-button');
+            const colorSettings = document.getElementById('color-settings');
+            const applyColorsButton = document.getElementById('apply-colors');
+            const resetColorsButton = document.getElementById('reset-colors');
+            
+            // Mặc định màu sắc
+            const defaultColors = {
+                phase1: '#0ea5e9',
+                phase2: '#10b981',
+                phase3: '#eab308',
+                phase4: '#ec4899'
+            };
+            
+            // Hiện/ẩn cài đặt màu sắc
+            colorSettingsButton.addEventListener('click', function() {
+                if (colorSettings.style.display === 'block') {
+                    colorSettings.style.display = 'none';
+                } else {
+                    colorSettings.style.display = 'block';
+                }
+            });
+            
+            // Áp dụng màu sắc mới
+            applyColorsButton.addEventListener('click', function() {
+                const phase1Color = document.getElementById('phase1-color').value;
+                const phase2Color = document.getElementById('phase2-color').value;
+                const phase3Color = document.getElementById('phase3-color').value;
+                const phase4Color = document.getElementById('phase4-color').value;
+                
+                // Cập nhật CSS cho các pha
+                document.querySelectorAll('.phase1').forEach(el => el.style.backgroundColor = phase1Color);
+                document.querySelectorAll('.phase2').forEach(el => el.style.backgroundColor = phase2Color);
+                document.querySelectorAll('.phase3').forEach(el => el.style.backgroundColor = phase3Color);
+                document.querySelectorAll('.phase4').forEach(el => el.style.backgroundColor = phase4Color);
+                
+                // Lưu vào localStorage
+                localStorage.setItem('bmag-colors', JSON.stringify({
+                    phase1: phase1Color,
+                    phase2: phase2Color,
+                    phase3: phase3Color,
+                    phase4: phase4Color
+                }));
+                
+                // Thông báo và tự động cập nhật
+                colorSettings.style.display = 'none';
+                createTimeFrames();
+            });
+            
+            // Khôi phục màu mặc định
+            resetColorsButton.addEventListener('click', function() {
+                document.getElementById('phase1-color').value = defaultColors.phase1;
+                document.getElementById('phase2-color').value = defaultColors.phase2;
+                document.getElementById('phase3-color').value = defaultColors.phase3;
+                document.getElementById('phase4-color').value = defaultColors.phase4;
+                
+                // Cập nhật CSS cho các pha
+                document.querySelectorAll('.phase1').forEach(el => el.style.backgroundColor = defaultColors.phase1);
+                document.querySelectorAll('.phase2').forEach(el => el.style.backgroundColor = defaultColors.phase2);
+                document.querySelectorAll('.phase3').forEach(el => el.style.backgroundColor = defaultColors.phase3);
+                document.querySelectorAll('.phase4').forEach(el => el.style.backgroundColor = defaultColors.phase4);
+                
+                // Xóa khỏi localStorage
+                localStorage.removeItem('bmag-colors');
+                
+                // Thông báo và tự động cập nhật
+                colorSettings.style.display = 'none';
+                createTimeFrames();
+            });
+            
+            // Kiểm tra và áp dụng màu từ localStorage khi tải trang
+            const savedColors = localStorage.getItem('bmag-colors');
+            if (savedColors) {
+                const colors = JSON.parse(savedColors);
+                document.getElementById('phase1-color').value = colors.phase1;
+                document.getElementById('phase2-color').value = colors.phase2;
+                document.getElementById('phase3-color').value = colors.phase3;
+                document.getElementById('phase4-color').value = colors.phase4;
+                
+                // Cập nhật CSS cho các pha
+                document.querySelectorAll('.phase1').forEach(el => el.style.backgroundColor = colors.phase1);
+                document.querySelectorAll('.phase2').forEach(el => el.style.backgroundColor = colors.phase2);
+                document.querySelectorAll('.phase3').forEach(el => el.style.backgroundColor = colors.phase3);
+                document.querySelectorAll('.phase4').forEach(el => el.style.backgroundColor = colors.phase4);
+            }
+
+            // Hàm tạo mốc thời gian mặc định
+            function createDefaultTimeMarkers(timeframe, markersArray, numPoints) {
+                const now = new Date();
+                const currentYear = now.getFullYear(); // Lưu năm hiện tại
+                const tfName = timeframe.name || "unknown";
+                
+                // Xác định thời điểm bắt đầu của khung thời gian
+                let startTime;
+                let endTime;
+                
+                if (tfName === "Y1") {
+                    // Năm bắt đầu từ 1/1 lúc 0h
+                    startTime = new Date(Date.UTC(currentYear, 0, 1, 0, 0, 0, 0));
+                    endTime = new Date(Date.UTC(currentYear + 1, 0, 1, 0, 0, 0, 0));
+                    
+                    // Tạo các mốc thời gian cụ thể cho 4 quý của năm
+                    // Q1: 1/1
+                    markersArray.push([`01/01/${currentYear}`, `07:00`]);
+                    // Giữa Q1
+                    markersArray.push([`15/02/${currentYear}`, `07:00`]);
+                    // Q2: 1/4
+                    markersArray.push([`01/04/${currentYear}`, `07:00`]);
+                    // Giữa Q2
+                    markersArray.push([`15/05/${currentYear}`, `07:00`]);
+                    // Q3: 1/7
+                    markersArray.push([`01/07/${currentYear}`, `07:00`]);
+                    // Giữa Q3
+                    markersArray.push([`15/08/${currentYear}`, `07:00`]);
+                    // Q4: 1/10
+                    markersArray.push([`01/10/${currentYear}`, `07:00`]);
+                    // Giữa Q4
+                    markersArray.push([`15/11/${currentYear}`, `07:00`]);
+                    // Năm kết thúc
+                    markersArray.push([`31/12/${currentYear}`, `07:00`]);
+                    
+                    // Dừng hàm ở đây vì đã tạo đầy đủ các mốc thời gian
+                    return;
+                } else if (tfName === "M3") {
+                    // Quý bắt đầu từ tháng 1/4/7/10 ngày 1 lúc 0h
+                    const currentQuarter = Math.floor(now.getUTCMonth() / 3);
+                    const startMonth = currentQuarter * 3; // 0=Jan, 3=Apr, 6=Jul, 9=Oct
+                    
+                    startTime = new Date(Date.UTC(currentYear, startMonth, 1, 0, 0, 0, 0));
+                    
+                    // Tính thời điểm kết thúc (đầu quý tiếp theo)
+                    let nextQuarterMonth = startMonth + 3;
+                    let nextQuarterYear = currentYear;
+                    if (nextQuarterMonth > 11) {
+                        nextQuarterMonth = 0;
+                        nextQuarterYear++;
+                    }
+                    endTime = new Date(Date.UTC(nextQuarterYear, nextQuarterMonth, 1, 0, 0, 0, 0));
+                } else if (tfName === "M1") {
+                    // Tháng bắt đầu từ ngày 1 lúc 0h
+                    startTime = new Date(Date.UTC(currentYear, now.getUTCMonth(), 1, 0, 0, 0, 0));
+                    
+                    // Tính thời điểm kết thúc (đầu tháng tiếp theo)
+                    let nextMonth = now.getUTCMonth() + 1;
+                    let nextYear = currentYear;
+                    if (nextMonth > 11) {
+                        nextMonth = 0;
+                        nextYear++;
+                    }
+                    endTime = new Date(Date.UTC(nextYear, nextMonth, 1, 0, 0, 0, 0));
+                } else if (tfName === "W1") {
+                    // Tuần bắt đầu từ thứ Hai lúc 0h
+                    const dayOfWeek = now.getUTCDay(); // 0 = Chủ nhật, 1 = Thứ hai, ...
+                    const daysSinceMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+                    
+                    startTime = new Date(Date.UTC(
+                        currentYear,
+                        now.getUTCMonth(),
+                        now.getUTCDate() - daysSinceMonday,
+                        0, 0, 0, 0
+                    ));
+                    
+                    // Thời điểm kết thúc là thứ Hai tuần sau
+                    endTime = new Date(startTime);
+                    endTime.setUTCDate(startTime.getUTCDate() + 7);
+                } else if (tfName.startsWith("D")) {
+                    // Xác định số ngày của khung thời gian
+                    const days = parseInt(tfName.substring(1));
+                    
+                    // Ngày bắt đầu lúc 0h UTC
+                    startTime = new Date(Date.UTC(
+                        currentYear,
+                        now.getUTCMonth(),
+                        now.getUTCDate(),
+                        0, 0, 0, 0
+                    ));
+                    
+                    // Thời điểm kết thúc
+                    endTime = new Date(startTime);
+                    endTime.setUTCDate(startTime.getUTCDate() + days);
+                } else if (tfName.startsWith("H")) {
+                    // Xác định số giờ của khung thời gian
+                    const hours = parseInt(tfName.substring(1));
+                    
+                    // Giờ bắt đầu
+                    const currentHour = now.getUTCHours();
+                    const startHour = Math.floor(currentHour / hours) * hours;
+                    
+                    startTime = new Date(Date.UTC(
+                        currentYear,
+                        now.getUTCMonth(),
+                        now.getUTCDate(),
+                        startHour, 0, 0, 0
+                    ));
+                    
+                    // Thời điểm kết thúc
+                    endTime = new Date(startTime);
+                    endTime.setUTCHours(startTime.getUTCHours() + hours);
+                } else if (tfName.endsWith("m")) {
+                    // Xác định số phút của khung thời gian
+                    const minutes = parseInt(tfName.replace('m', ''));
+                    
+                    // Phút bắt đầu
+                    const currentMinute = now.getUTCMinutes();
+                    const startMinute = Math.floor(currentMinute / minutes) * minutes;
+                    
+                    startTime = new Date(Date.UTC(
+                        currentYear,
+                        now.getUTCMonth(),
+                        now.getUTCDate(),
+                        now.getUTCHours(),
+                        startMinute, 0, 0
+                    ));
+                    
+                    // Thời điểm kết thúc
+                    endTime = new Date(startTime);
+                    endTime.setUTCMinutes(startTime.getUTCMinutes() + minutes);
+                } else {
+                    // Mặc định nếu không xác định được khung thời gian
+                    startTime = new Date();
+                    endTime = new Date(startTime);
+                    endTime.setUTCHours(startTime.getUTCHours() + 1);
+                }
+                
+                // Tính toán khoảng thời gian
+                const timeRange = endTime - startTime;
+                
+                // Tạo các mốc thời gian cho từng dấu chấm
+                for (let i = 0; i < numPoints; i++) {
+                    const percentTime = i / (numPoints - 1);
+                    const timePoint = new Date(startTime.getTime() + (timeRange * percentTime));
+                    
+                    // Định dạng ngày và giờ
+                    const datePart = `${String(timePoint.getUTCDate()).padStart(2, '0')}/${String(timePoint.getUTCMonth() + 1).padStart(2, '0')}`;
+                    const timePart = `${String(timePoint.getUTCHours()).padStart(2, '0')}:${String(timePoint.getUTCMinutes()).padStart(2, '0')}`;
+                    
+                    // Đối với khung thời gian dài (Y1, M3, M1, W1), hiển thị giờ cố định là 07:00 theo quy tắc BMaG
+                    const displayTimePart = (tfName === "Y1" || tfName === "M3" || tfName === "M1" || tfName === "W1") ? "07:00" : timePart;
+                    
+                    markersArray.push([datePart, displayTimePart]);
+                }
+            }
+
+            // Thay bằng:
+
+            // Hàm tạo mốc thời gian mặc định - Sử dụng hàm từ TimeCalculator
+            function createDefaultTimeMarkers(timeframe, markersArray, numPoints) {
+                // Gọi hàm từ TimeCalculator để tạo mốc thời gian
+                TimeCalculator.createDefaultTimeMarkers(timeframe, markersArray, numPoints);
+            }
+        });
+    </script>
+</body>
+</html>
